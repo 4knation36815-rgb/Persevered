@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persevered — Your Custom Fitness Journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <!-- SheetJS for Excel generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f8f5f0;
+      --off-white: #fdfcfa;
+      --linen: #ede9e2;
+      --stone: #c8c0b4;
+      --warm-gray: #8a8278;
+      --charcoal: #2c2925;
+      --dark: #1a1815;
+      --gold: #b8924a;
+      --gold-light: #d4aa6a;
+      --gold-dim: rgba(184,146,74,0.12);
+      --green: #4a7c59;
+      --red: #8b3a3a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--off-white);
+      color: var(--charcoal);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 28px 60px;
+      border-bottom: 1px solid var(--linen);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--off-white);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-size: 20px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--dark);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+
+    .header-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      height: 2px;
+      background: var(--linen);
+      position: sticky;
+      top: 73px;
+      z-index: 49;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--gold);
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .form-shell {
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 80px 24px 120px;
+    }
+
+    /* ── INTRO ── */
+    .intro-block {
+      margin-bottom: 64px;
+    }
+
+    .intro-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .intro-tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    .intro-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(40px, 6vw, 64px);
+      line-height: 1.1;
+      color: var(--dark);
+      margin-bottom: 20px;
+    }
+    .intro-title em { font-style: italic; color: var(--gold); }
+
+    .intro-sub {
+      font-size: 15px;
+      color: var(--warm-gray);
+      line-height: 1.85;
+      max-width: 480px;
+    }
+
+    /* ── SECTION ── */
+    .form-section {
+      margin-bottom: 48px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      pointer-events: none;
+    }
+    .form-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+    .form-section.hidden-section {
+      display: none;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--stone);
+      margin-bottom: 10px;
+    }
+
+    .field-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--dark);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .field-hint {
+      font-size: 13px;
+      color: var(--stone);
+      margin-top: -12px;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    /* ── INPUT TYPES ── */
+    .text-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--linen);
+      padding: 12px 0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 300;
+      color: var(--charcoal);
+      outline: none;
+      transition: border-color 0.25s;
+    }
+    .text-input:focus { border-bottom-color: var(--gold); }
+    .text-input::placeholder { color: var(--stone); font-size: 15px; }
+
+    .input-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+
+    /* Choice chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      padding: 11px 22px;
+      border: 1px solid var(--linen);
+      background: var(--cream);
+      color: var(--warm-gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--stone); color: var(--charcoal); }
+    .chip.selected {
+      background: var(--dark);
+      border-color: var(--dark);
+      color: var(--cream);
+    }
+    .chip.multi.selected {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--charcoal);
+    }
+
+    /* Scale slider */
+    .scale-wrap { padding: 8px 0; }
+    .scale-input {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 1px;
+      background: var(--linen);
+      outline: none;
+      cursor: pointer;
+    }
+    .scale-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--gold);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .scale-input::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .scale-labels span {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+    .scale-value {
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 40px;
+      font-weight: 300;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    /* Textarea */
+    .text-area {
+      width: 100%;
+      background: var(--cream);
+      border: 1px solid var(--linen);
+      border-bottom: 1px solid var(--stone);
+      padding: 16px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--charcoal);
+      outline: none;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.2s;
+    }
+    .text-area:focus { border-bottom-color: var(--gold); }
+    .text-area::placeholder { color: var(--stone); }
+
+    /* Number input */
+    .number-input {
+      width: 140px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--linen);
+      padding: 12px 0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--charcoal);
+      outline: none;
+      transition: border-color 0.25s;
+      text-align: center;
+    }
+    .number-input:focus { border-bottom-color: var(--gold); }
+
+    /* ── LEVEL INDICATOR ── */
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      border: 1px solid var(--linen);
+      background: var(--cream);
+      margin-bottom: 48px;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    .level-badge.show { opacity: 1; }
+    .level-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--stone);
+      transition: background 0.5s;
+    }
+    .level-dot.beginner { background: var(--green); }
+    .level-dot.intermediate { background: var(--gold); }
+    .level-dot.advanced { background: var(--red); }
+    .level-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+
+    /* ── DIVIDER ── */
+    .form-divider {
+      height: 1px;
+      background: var(--linen);
+      margin: 48px 0;
+    }
+
+    /* ── NEXT / SUBMIT BTN ── */
+    .btn-next {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: var(--dark);
+      color: var(--cream);
+      border: none;
+      padding: 16px 48px;
+      cursor: pointer;
+      transition: background 0.25s;
+      margin-top: 40px;
+    }
+    .btn-next:hover { background: var(--gold); }
+    .btn-next:disabled {
+      background: var(--linen);
+      color: var(--stone);
+      cursor: not-allowed;
+    }
+
+    /* ── SUCCESS ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 80px 0;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 36px;
+      color: var(--gold);
+    }
+
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 52px;
+      line-height: 1.1;
+      color: var(--dark);
+      margin-bottom: 16px;
+    }
+    .success-title em { font-style: italic; color: var(--gold); }
+
+    .success-sub {
+      font-size: 15px;
+      color: var(--warm-gray);
+      line-height: 1.9;
+      max-width: 400px;
+      margin: 0 auto 36px;
+    }
+
+    .success-detail {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--stone);
+      padding: 16px 24px;
+      border: 1px solid var(--linen);
+      display: inline-block;
+    }
+
+    /* ── SENDING STATE ── */
+    .sending-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(253,252,250,0.9);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .sending-overlay.show { display: flex; }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--linen);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .sending-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+
+    /* ── ERROR MSG ── */
+    .error-msg {
+      display: none;
+      background: #fff5f5;
+      border: 1px solid #e8c0c0;
+      color: var(--red);
+      padding: 16px 20px;
+      font-size: 14px;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { padding: 20px 24px; }
+      .form-shell { padding: 48px 20px 100px; }
+      .input-row-2 { grid-template-columns: 1fr; gap: 24px; }
+      .chips { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SENDING OVERLAY -->
+  <div class="sending-overlay" id="sendingOverlay">
+    <div class="spinner"></div>
+    <p class="sending-text">Sending your plan request…</p>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <a class="logo" href="#">Persever<span>ed</span></a>
+    <span class="header-tag">Client Intake — Confidential</span>
+  </header>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- FORM SHELL -->
+  <div class="form-shell">
+
+    <!-- INTRO -->
+    <div class="intro-block">
+      <p class="intro-tag">Your Custom Plan Starts Here</p>
+      <h1 class="intro-title">Tell us<br/>about <em>yourself.</em></h1>
+      <p class="intro-sub">Answer honestly — there are no wrong answers. Your responses shape everything we build for you.</p>
+    </div>
+
+    <!-- LEVEL BADGE -->
+    <div class="level-badge" id="levelBadge">
+      <div class="level-dot" id="levelDot"></div>
+      <span class="level-text" id="levelText">Assessing your level…</span>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- LAYER 1 — EVERYONE (always shown)        -->
+    <!-- ════════════════════════════════════════ -->
+
+    <!-- Q1: Name + Email -->
+    <div class="form-section" id="s-identity">
+      <p class="section-label">Section 01 — Identity</p>
+      <div class="input-row-2" style="margin-bottom:32px">
+        <div>
+          <p class="field-label">What's your name?</p>
+          <input class="text-input" id="f-name" type="text" placeholder="Full name" />
+        </div>
+        <div>
+          <p class="field-label">Your email address</p>
+          <input class="text-input" id="f-email" type="email" placeholder="you@email.com" />
+        </div>
+      </div>
+      <div class="input-row-2">
+        <div>
+          <p class="field-label">Your age</p>
+          <input class="text-input" id="f-age" type="number" placeholder="e.g. 28" min="13" max="99" />
+        </div>
+        <div>
+          <p class="field-label">Gender</p>
+          <div class="chips" id="chips-gender">
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Male</div>
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Female</div>
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Non-binary</div>
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Prefer not to say</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q2: Primary Goal -->
+    <div class="form-section" id="s-goal">
+      <p class="section-label">Section 02 — Goal</p>
+      <p class="field-label">What's your primary fitness goal?</p>
+      <div class="chips" id="chips-goal">
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Lose Fat</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Build Muscle</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Improve Endurance</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Get Stronger</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Athletic Performance</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">General Fitness</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q3: Training Frequency -->
+    <div class="form-section" id="s-freq">
+      <p class="section-label">Section 03 — Current Routine</p>
+      <p class="field-label">How often do you currently exercise?</p>
+      <div class="chips" id="chips-freq">
+        <div class="chip" data-group="freq" data-score="0" onclick="pickChip(this); score()">Never / rarely</div>
+        <div class="chip" data-group="freq" data-score="1" onclick="pickChip(this); score()">1–2x per week</div>
+        <div class="chip" data-group="freq" data-score="2" onclick="pickChip(this); score()">3–4x per week</div>
+        <div class="chip" data-group="freq" data-score="3" onclick="pickChip(this); score()">5+ times per week</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q4: Experience -->
+    <div class="form-section" id="s-exp">
+      <p class="section-label">Section 04 — Experience</p>
+      <p class="field-label">How long have you been training consistently?</p>
+      <div class="chips" id="chips-exp">
+        <div class="chip" data-group="exp" data-score="0" onclick="pickChip(this); score()">Less than 6 months</div>
+        <div class="chip" data-group="exp" data-score="1" onclick="pickChip(this); score()">6 months – 2 years</div>
+        <div class="chip" data-group="exp" data-score="2" onclick="pickChip(this); score()">2–5 years</div>
+        <div class="chip" data-group="exp" data-score="3" onclick="pickChip(this); score()">5+ years</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q5: Available time per session -->
+    <div class="form-section" id="s-time">
+      <p class="section-label">Section 05 — Schedule</p>
+      <p class="field-label">How much time can you dedicate per session?</p>
+      <div class="chips" id="chips-time">
+        <div class="chip" data-group="time" onclick="pickChip(this)">Under 30 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">30–45 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">45–60 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">60–90 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">90+ min</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q6: Equipment -->
+    <div class="form-section" id="s-equip">
+      <p class="section-label">Section 06 — Equipment</p>
+      <p class="field-label">What equipment do you have access to?</p>
+      <p class="field-hint">Select all that apply</p>
+      <div class="chips" id="chips-equip">
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Full Gym</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Home Gym</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Dumbbells</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Barbells & Rack</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Resistance Bands</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Cardio Machines</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">No Equipment</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q7: Injuries -->
+    <div class="form-section" id="s-injury">
+      <p class="section-label">Section 07 — Health</p>
+      <p class="field-label">Any injuries or physical limitations we should know about?</p>
+      <textarea class="text-area" id="f-injury" placeholder="e.g. Lower back pain, bad knees, shoulder surgery — or type 'None'"></textarea>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- LAYER 2 — INTERMEDIATE (score ≥ 3)       -->
+    <!-- ════════════════════════════════════════ -->
+
+    <div class="form-divider hidden-section" id="div-intermediate"></div>
+
+    <div class="form-section hidden-section" id="s-style">
+      <p class="section-label">Section 08 — Training Style</p>
+      <p class="field-label">What training styles have you tried?</p>
+      <p class="field-hint">Select all that apply</p>
+      <div class="chips" id="chips-style">
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Weightlifting</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">CrossFit / HIIT</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Calisthenics</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Running / Cycling</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Yoga / Mobility</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Powerlifting</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Sports-specific</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-int2"></div>
+
+    <div class="form-section hidden-section" id="s-nutrition">
+      <p class="section-label">Section 09 — Nutrition</p>
+      <p class="field-label">How would you describe your current diet?</p>
+      <div class="chips" id="chips-nutrition">
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">No specific diet</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">High protein focus</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Calorie tracking</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Keto / Low-carb</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Vegetarian / Vegan</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Intermittent Fasting</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-int3"></div>
+
+    <div class="form-section hidden-section" id="s-body">
+      <p class="section-label">Section 10 — Body Metrics</p>
+      <p class="field-label">Your current stats</p>
+      <p class="field-hint">Approximate is fine</p>
+      <div class="input-row-2">
+        <div>
+          <p style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px">Weight (kg)</p>
+          <input class="text-input" id="f-weight" type="number" placeholder="e.g. 78" />
+        </div>
+        <div>
+          <p style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px">Height (cm)</p>
+          <input class="text-input" id="f-height" type="number" placeholder="e.g. 178" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-int4"></div>
+
+    <div class="form-section hidden-section" id="s-obstacle">
+      <p class="section-label">Section 11 — Challenges</p>
+      <p class="field-label">What's held you back from reaching your goal before?</p>
+      <textarea class="text-area" id="f-obstacle" placeholder="e.g. Lack of time, inconsistency, no proper guidance…"></textarea>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- LAYER 3 — ADVANCED (score ≥ 5)           -->
+    <!-- ════════════════════════════════════════ -->
+
+    <div class="form-divider hidden-section" id="div-advanced"></div>
+
+    <div class="form-section hidden-section" id="s-lifts">
+      <p class="section-label">Section 12 — Strength Benchmarks</p>
+      <p class="field-label">Your approximate 1-rep max (or working weight)</p>
+      <p class="field-hint">Leave blank if not applicable</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:8px">
+        <div>
+          <p style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px">Squat (kg)</p>
+          <input class="text-input" id="f-squat" type="number" placeholder="e.g. 120" />
+        </div>
+        <div>
+          <p style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px">Bench Press (kg)</p>
+          <input class="text-input" id="f-bench" type="number" placeholder="e.g. 90" />
+        </div>
+        <div>
+          <p style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px">Deadlift (kg)</p>
+          <input class="text-input" id="f-deadlift" type="number" placeholder="e.g. 150" />
+        </div>
+        <div>
+          <p style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:8px">Overhead Press (kg)</p>
+          <input class="text-input" id="f-ohp" type="number" placeholder="e.g. 60" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv2"></div>
+
+    <div class="form-section hidden-section" id="s-program">
+      <p class="section-label">Section 13 — Programming Preference</p>
+      <p class="field-label">What programming approach do you prefer?</p>
+      <div class="chips" id="chips-program">
+        <div class="chip" data-group="program" onclick="pickChip(this)">Linear Progression</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Periodisation (Wave Loading)</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Daily Undulating Periodisation</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Block Periodisation</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Let my coach decide</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv3"></div>
+
+    <div class="form-section hidden-section" id="s-tracking">
+      <p class="section-label">Section 14 — Performance Tracking</p>
+      <p class="field-label">What do you currently track?</p>
+      <p class="field-hint">Select all that apply</p>
+      <div class="chips" id="chips-tracking">
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Calories & Macros</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Body Weight</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Workout Volume</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Sleep</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Heart Rate / HRV</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Progress Photos</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Nothing currently</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv4"></div>
+
+    <div class="form-section hidden-section" id="s-compete">
+      <p class="section-label">Section 15 — Competition & Performance</p>
+      <p class="field-label">Are you training for any specific event or competition?</p>
+      <textarea class="text-area" id="f-compete" placeholder="e.g. Powerlifting meet in March, Tough Mudder, sport season — or 'No'"></textarea>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv5"></div>
+
+    <div class="form-section hidden-section" id="s-advanced-notes">
+      <p class="section-label">Section 16 — Additional Detail</p>
+      <p class="field-label">Anything else your coach should know?</p>
+      <textarea class="text-area" id="f-adv-notes" placeholder="Supplement stack, past programs, specific weaknesses, performance goals…"></textarea>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- SUBMIT                                    -->
+    <!-- ════════════════════════════════════════ -->
+
+    <div id="submitWrap" style="display:none; margin-top:56px">
+      <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--stone);margin-bottom:16px">You're all set</p>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--dark);margin-bottom:8px">Ready to build your plan?</p>
+      <p style="font-size:14px;color:var(--warm-gray);line-height:1.8;margin-bottom:32px">Your responses will be sent to your Persevered coach. You'll hear back within 24 hours.</p>
+      <button class="btn-next" id="submitBtn" onclick="submitForm()">Send My Responses →</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✦</div>
+      <h2 class="success-title">Your journey<br/><em>begins now.</em></h2>
+      <p class="success-sub">We've received everything we need. Your Persevered coach will reach out within 24 hours with your fully personalised plan.</p>
+      <div class="success-detail" id="successDetail">Plan Type: —</div>
+    </div>
+
+  </div><!-- end form-shell -->
+
+  <script>
+  // ── CONFIG ──────────────────────────────────────────────────────────
+  const OWNER_EMAIL = '4knation36815@gmail.com';
+
+  // Google Apps Script Web App URL
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwdkCpp5JWQ3riJo5Ie0S5TQSvCeKy3t5N9in4RMcRZEs5fu0kW7iGIA1oUd9ZnwHI6/exec';
+
+  // EmailJS public key & service/template IDs
+  // IMPORTANT: Replace these with your real EmailJS credentials
+  const EMAILJS_PUBLIC_KEY  = 'Rr7lKNhO2T1KPs88x';
+  const EMAILJS_SERVICE_ID  = 'service_43u0imi';
+  const EMAILJS_TEMPLATE_ID = 'template_5gw25lk';
+
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  // ── STATE ────────────────────────────────────────────────────────────
+  let knowledgeScore = 0;
+  let detectedLevel  = 'beginner'; // beginner | intermediate | advanced
+  let intermediateShown = false;
+  let advancedShown     = false;
+
+  // ── ALL SECTIONS in order ───────────────────────────────────────────
+  const ALL_SECTIONS = [
+    's-identity','s-goal','s-freq','s-exp','s-time','s-equip','s-injury',
+    's-style','s-nutrition','s-body','s-obstacle',
+    's-lifts','s-program','s-tracking','s-compete','s-advanced-notes'
+  ];
+
+  const BASE_SECTIONS  = ['s-identity','s-goal','s-freq','s-exp','s-time','s-equip','s-injury'];
+  const INT_SECTIONS   = ['s-style','s-nutrition','s-body','s-obstacle'];
+  const ADV_SECTIONS   = ['s-lifts','s-program','s-tracking','s-compete','s-advanced-notes'];
+  const INT_DIVIDERS   = ['div-intermediate','div-int2','div-int3','div-int4'];
+  const ADV_DIVIDERS   = ['div-advanced','div-adv2','div-adv3','div-adv4','div-adv5'];
+
+  const TOTAL_SECTIONS = BASE_SECTIONS.length;
+
+  // ── INIT ─────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    BASE_SECTIONS.forEach(id => show(id));
+    updateProgress();
+    setTimeout(() => document.getElementById('submitWrap').style.display = 'block', 400);
+  });
+
+  // ── CHIP PICKERS ─────────────────────────────────────────────────────
+  function pickChip(el) {
+    const group = el.dataset.group;
+    document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function pickMulti(el) {
+    el.classList.toggle('selected');
+  }
+
+  // ── SCORING ENGINE ───────────────────────────────────────────────────
+  function score() {
+    const freqEl  = document.querySelector('.chip[data-group="freq"].selected');
+    const expEl   = document.querySelector('.chip[data-group="exp"].selected');
+    const freqScore = freqEl  ? parseInt(freqEl.dataset.score  || 0) : 0;
+    const expScore  = expEl   ? parseInt(expEl.dataset.score   || 0) : 0;
+    knowledgeScore = freqScore + expScore;
+
+    // Update level badge
+    const badge = document.getElementById('levelBadge');
+    const dot   = document.getElementById('levelDot');
+    const txt   = document.getElementById('levelText');
+    badge.classList.add('show');
+
+    if (knowledgeScore <= 2) {
+      detectedLevel = 'beginner';
+      dot.className = 'level-dot beginner';
+      txt.textContent = 'Level: Beginner — keeping it simple for you';
+    } else if (knowledgeScore <= 4) {
+      detectedLevel = 'intermediate';
+      dot.className = 'level-dot intermediate';
+      txt.textContent = 'Level: Intermediate — unlocking deeper questions';
+    } else {
+      detectedLevel = 'advanced';
+      dot.className = 'level-dot advanced';
+      txt.textContent = 'Level: Advanced — full detail mode';
+    }
+
+    // Unlock sections progressively
+    if (knowledgeScore >= 3 && !intermediateShown) {
+      intermediateShown = true;
+      INT_DIVIDERS.forEach(id => showDiv(id));
+      INT_SECTIONS.forEach(id => show(id));
+    }
+
+    if (knowledgeScore >= 5 && !advancedShown) {
+      advancedShown = true;
+      ADV_DIVIDERS.forEach(id => showDiv(id));
+      ADV_SECTIONS.forEach(id => show(id));
+    }
+
+    updateProgress();
+  }
+
+  function show(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('hidden-section');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => el.classList.add('visible'));
+    });
+  }
+
+  function showDiv(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden-section');
+  }
+
+  function updateProgress() {
+    const visible = document.querySelectorAll('.form-section.visible').length;
+    const total   = ALL_SECTIONS.length;
+    const pct     = Math.round((visible / total) * 85);
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  // ── COLLECT DATA ─────────────────────────────────────────────────────
+  function getVal(id)      { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function getChip(group)  { const el = document.querySelector(`.chip[data-group="${group}"].selected`); return el ? el.textContent.trim() : ''; }
+  function getMulti(group) { return [...document.querySelectorAll(`.chip[data-group="${group}"].selected`)].map(c => c.textContent.trim()).join(', ') || ''; }
+
+  function collectData() {
+    const base = {
+      'Submission Date': new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}),
+      'Client Level': detectedLevel.charAt(0).toUpperCase() + detectedLevel.slice(1),
+      'Full Name':    getVal('f-name'),
+      'Email':        getVal('f-email'),
+      'Age':          getVal('f-age'),
+      'Gender':       getChip('gender'),
+      'Primary Goal': getChip('goal'),
+      'Training Frequency': getChip('freq'),
+      'Training Experience': getChip('exp'),
+      'Time Per Session': getChip('time'),
+      'Equipment Access': getMulti('equip'),
+      'Injuries / Limitations': getVal('f-injury'),
+    };
+
+    const intermediate = knowledgeScore >= 3 ? {
+      'Training Styles': getMulti('style'),
+      'Current Diet': getChip('nutrition'),
+      'Weight (kg)': getVal('f-weight'),
+      'Height (cm)': getVal('f-height'),
+      'Past Obstacles': getVal('f-obstacle'),
+    } : {};
+
+    const advanced = knowledgeScore >= 5 ? {
+      'Squat 1RM (kg)':      getVal('f-squat'),
+      'Bench 1RM (kg)':      getVal('f-bench'),
+      'Deadlift 1RM (kg)':   getVal('f-deadlift'),
+      'OHP 1RM (kg)':        getVal('f-ohp'),
+      'Programming Preference': getChip('program'),
+      'What They Track':     getMulti('tracking'),
+      'Competition / Event': getVal('f-compete'),
+      'Additional Notes':    getVal('f-adv-notes'),
+    } : {};
+
+    return { ...base, ...intermediate, ...advanced };
+  }
+
+  // ── EXCEL GENERATION ─────────────────────────────────────────────────
+  function buildExcel(data) {
+    const levelLabel = data['Client Level'].toUpperCase();
+    const sheetName  = levelLabel + ' CLIENTS';
+
+    const wb = XLSX.utils.book_new();
+    const headers = Object.keys(data);
+    const row     = Object.values(data);
+
+    // Title row style via HTML approach
+    const ws = XLSX.utils.aoa_to_sheet([
+      [`PERSEVERED — ${levelLabel} CLIENT INTAKE`],
+      [`Generated: ${new Date().toLocaleString()}`],
+      [],
+      headers,
+      row
+    ]);
+
+    // Column widths
+    ws['!cols'] = headers.map(() => ({ wch: 28 }));
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // Return as base64
+    return XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+  }
+
+  // ── SUBMIT ───────────────────────────────────────────────────────────
+  async function submitForm() {
+    const name  = getVal('f-name');
+    const email = getVal('f-email');
+
+    if (!name || !email) {
+      showError('Please enter your name and email before submitting.');
+      return;
+    }
+    if (!email.includes('@')) {
+      showError('Please enter a valid email address.');
+      return;
+    }
+
+    const data    = collectData();
+    const level   = data['Client Level'];
+    const summary = buildSummary(data);
+
+    document.getElementById('sendingOverlay').classList.add('show');
+
+    // ── 1. SEND TO GOOGLE SHEETS (iframe POST — avoids CORS) ───────────
+    let sheetsOk = false;
+    try {
+      await new Promise((resolve) => {
+        const iframe = document.createElement('iframe');
+        iframe.name = 'gs_iframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = SHEETS_URL;
+        form.target = 'gs_iframe';
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'payload';
+        input.value = JSON.stringify(data);
+        form.appendChild(input);
+        document.body.appendChild(form);
+
+        setTimeout(() => { resolve(); }, 3000);
+        form.submit();
+        sheetsOk = true;
+      });
+    } catch (err) {
+      console.warn('Google Sheets error:', err);
+    }
+
+    // ── 2. SEND EMAIL NOTIFICATION VIA EMAILJS ────────────────────────
+    let emailOk = false;
+    try {
+      const templateParams = {
+        to_email:     OWNER_EMAIL,
+        subject:      'New ' + level + ' Client - ' + name + ' | Persevered',
+        client_name:  name,
+        client_email: email,
+        client_level: level,
+        summary:      summary,
+      };
+      const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+      emailOk = true;
+    } catch (err) {
+      console.warn('EmailJS error details:', JSON.stringify(err), err.text || '', err.status || '');
+    }
+
+    document.getElementById('sendingOverlay').classList.remove('show');
+
+    // ── 3. SHOW SUCCESS (if at least Sheets worked) ───────────────────
+    if (sheetsOk || emailOk) {
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('submitWrap').style.display = 'none';
+      document.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
+      document.querySelectorAll('.form-divider').forEach(d => d.style.display = 'none');
+      document.querySelector('.intro-block').style.display = 'none';
+      document.getElementById('levelBadge').style.display  = 'none';
+
+      const ss = document.getElementById('successScreen');
+      ss.style.display = 'block';
+      document.getElementById('successDetail').textContent = `Plan Type: ${level} · Coach response within 24 hours`;
+    } else {
+      showError('Something went wrong. Please email us at ' + OWNER_EMAIL + '. Check that your EmailJS template variables match exactly.');
+    }
+  }
+
+  function buildSummary(data) {
+    return Object.entries(data)
+      .map(([k, v]) => `${k}: ${v || '—'}`)
+      .join('\n');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.innerHTML = msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  </script>
+
+</body>
+</html>
