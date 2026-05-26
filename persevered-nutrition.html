@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persevered — Nutrition Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fdfcfa;
+      --cream: #f8f5f0;
+      --linen: #ede9e2;
+      --stone: #c8c0b4;
+      --warm-gray: #8a8278;
+      --charcoal: #2c2925;
+      --dark: #1a1815;
+      --gold: #b8924a;
+      --gold-l: #d4aa6a;
+      --gold-dim: rgba(184,146,74,0.12);
+      --green: #3d7a52;
+      --green-l: #e8f5ee;
+      --red: #b84a4a;
+      --red-l: #faeaea;
+      --blue: #3a5fa8;
+      --blue-l: #eaeffa;
+      --border: #e8e2da;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--charcoal);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--dark);
+      padding: 0 48px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #f0ede8;
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+    .header-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+
+    /* ── LAYOUT ── */
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .panel-header {
+      background: var(--dark);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .panel-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .panel-body { padding: 28px; }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-bottom: 2px solid var(--stone);
+      padding: 14px 48px 14px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--charcoal);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-bottom-color: var(--gold); }
+    .search-input::placeholder { color: var(--stone); }
+    .search-btn {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      background: var(--gold);
+      border: none;
+      padding: 0 18px;
+      cursor: pointer;
+      color: white;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+    .search-btn:hover { background: var(--gold-l); }
+
+    /* ── SOURCE TOGGLE ── */
+    .source-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .src-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      color: var(--warm-gray);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .src-btn.active {
+      background: var(--dark);
+      border-color: var(--dark);
+      color: var(--gold);
+    }
+
+    /* ── RESULTS ── */
+    .results-list { max-height: 420px; overflow-y: auto; }
+    .results-list::-webkit-scrollbar { width: 4px; }
+    .results-list::-webkit-scrollbar-thumb { background: var(--linen); }
+
+    .result-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .result-item:hover { background: var(--cream); }
+    .result-item:last-child { border-bottom: none; }
+    .result-name {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--charcoal);
+      margin-bottom: 3px;
+    }
+    .result-brand {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+    .result-cal {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--gold);
+      white-space: nowrap;
+      margin-left: 16px;
+    }
+    .result-cal span {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--stone);
+    }
+
+    /* ── FOOD DETAIL ── */
+    .food-detail {
+      display: none;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .food-detail.show { display: block; }
+    .food-detail-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 300;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+    .food-detail-source {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--stone);
+      margin-bottom: 20px;
+    }
+
+    /* Portion adjuster */
+    .portion-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .portion-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      flex-shrink: 0;
+    }
+    .portion-input {
+      width: 80px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--stone);
+      padding: 4px 0;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--dark);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .portion-input:focus { border-bottom-color: var(--gold); }
+    .portion-unit {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--stone);
+    }
+
+    /* Macro cards */
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .macro-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .macro-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--dark);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .macro-val.cal { color: var(--gold); font-size: 32px; }
+    .macro-val.prot { color: var(--blue); }
+    .macro-val.carb { color: var(--green); }
+    .macro-val.fat { color: var(--red); }
+    .macro-unit {
+      font-family: 'DM Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+
+    .add-btn {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      background: var(--dark);
+      color: white;
+      border: none;
+      padding: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .add-btn:hover { background: var(--gold); }
+
+    /* ── MEAL PLANNER (right column) ── */
+    .daily-summary {
+      position: sticky;
+      top: 80px;
+    }
+
+    /* Daily macro bars */
+    .daily-macros { margin-bottom: 24px; }
+    .daily-cal {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 52px;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .daily-cal-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--stone);
+      margin-bottom: 20px;
+    }
+
+    .macro-bar-row {
+      margin-bottom: 14px;
+    }
+    .macro-bar-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .macro-bar-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .macro-bar-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--charcoal);
+    }
+    .macro-bar-track {
+      height: 3px;
+      background: var(--linen);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .macro-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      max-width: 100%;
+    }
+    .bar-prot { background: var(--blue); }
+    .bar-carb { background: var(--green); }
+    .bar-fat  { background: var(--red); }
+
+    /* Meal sections */
+    .meal-section { margin-bottom: 4px; }
+    .meal-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .meal-hdr:hover { background: var(--linen); }
+    .meal-hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .meal-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--charcoal);
+    }
+    .meal-kcal {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      color: var(--gold);
+    }
+
+    .meal-items { border: 1px solid var(--border); border-top: none; }
+    .meal-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .meal-item:last-child { border-bottom: none; }
+    .meal-item:hover { background: var(--cream); }
+    .meal-item-name {
+      font-size: 13px;
+      color: var(--charcoal);
+      flex: 1;
+    }
+    .meal-item-qty {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--stone);
+      margin: 0 12px;
+    }
+    .meal-item-cal {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      margin-right: 10px;
+    }
+    .meal-item-del {
+      background: none;
+      border: none;
+      color: var(--stone);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+      transition: color 0.15s;
+    }
+    .meal-item-del:hover { color: var(--red); }
+
+    .empty-meal {
+      padding: 16px;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--stone);
+      border: 1px solid var(--border);
+      border-top: none;
+    }
+
+    /* Add to meal selector */
+    .meal-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .meal-sel-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      color: var(--warm-gray);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .meal-sel-btn.active {
+      background: var(--dark);
+      border-color: var(--dark);
+      color: var(--gold);
+    }
+
+    /* Export */
+    .export-btn {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--warm-gray);
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 16px;
+    }
+    .export-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── LOADING / EMPTY ── */
+    .state-msg {
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .state-icon { font-size: 32px; margin-bottom: 12px; }
+    .state-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--stone);
+    }
+    .spinner-inline {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid var(--linen);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TARGET BAR ── */
+    .target-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .target-row:last-child { border-bottom: none; }
+    .target-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+    }
+    .target-input {
+      width: 80px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--linen);
+      padding: 4px 0;
+      font-size: 13px;
+      color: var(--dark);
+      text-align: right;
+      outline: none;
+      font-family: 'DM Mono', monospace;
+      transition: border-color 0.2s;
+    }
+    .target-input:focus { border-bottom-color: var(--gold); }
+
+    /* ── NOTIFICATION ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--dark);
+      color: var(--gold);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      transition: transform 0.3s;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      header { padding: 0 20px; }
+      .app { grid-template-columns: 1fr; gap: 24px; padding: 24px 16px 60px; }
+      .daily-summary { position: static; }
+      .macro-grid { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">Persever<span>ed</span></a>
+  <span class="header-tag">Nutrition Tool — Powered by USDA & Open Food Facts</span>
+</header>
+
+<div class="app">
+
+  <!-- ── LEFT: SEARCH + FOOD DETAIL ── -->
+  <div>
+
+    <!-- Search Panel -->
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-header">
+        <span class="panel-title">🔍 Food Search</span>
+      </div>
+      <div class="panel-body">
+
+        <div class="source-toggle">
+          <button class="src-btn active" onclick="setSource('both',this)">All Foods</button>
+          <button class="src-btn" onclick="setSource('indian',this)">🇮🇳 Indian Foods</button>
+          <button class="src-btn" onclick="setSource('usda',this)">USDA Database</button>
+        </div>
+
+        <div class="search-wrap">
+          <input class="search-input" id="searchInput" type="text"
+            placeholder="Search food… e.g. Dal Makhani, Paneer, Biryani"
+            onkeydown="if(event.key==='Enter') doSearch()" />
+          <button class="search-btn" onclick="doSearch()">⌕</button>
+        </div>
+
+        <!-- Quick suggestions -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px" id="suggestions">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);align-self:center">Quick:</span>
+          <script>
+            const quickFoods=["Dal Makhani","Chicken Biryani","Paneer Butter Masala","Roti","White Rice","Egg","Banana","Oats","Curd","Almonds"];
+            document.write(quickFoods.map(f=>`<button onclick="quickSearch('${f}')" style="font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 12px;border:1px solid var(--border);background:var(--cream);color:var(--warm-gray);cursor:pointer;border-radius:0;transition:all 0.15s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--warm-gray)'">${f}</button>`).join(''));
+          </script>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsWrap">
+          <div class="state-msg">
+            <div class="state-icon">🍽️</div>
+            <div class="state-text">Search any food above</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Food Detail -->
+    <div class="food-detail" id="foodDetail">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <div>
+          <div class="food-detail-name" id="detailName">—</div>
+          <div class="food-detail-source" id="detailSource">—</div>
+        </div>
+        <button onclick="closeDetail()" style="background:none;border:none;font-size:20px;color:var(--stone);cursor:pointer">✕</button>
+      </div>
+
+      <!-- Portion -->
+      <div class="portion-row">
+        <span class="portion-label">Portion</span>
+        <input class="portion-input" id="portionInput" type="number" value="100" min="1" max="2000" oninput="updateMacros()" />
+        <span class="portion-unit">grams</span>
+      </div>
+
+      <!-- Meal selector -->
+      <div style="margin-bottom:12px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--warm-gray);margin-bottom:8px">Add to meal</div>
+        <div class="meal-selector" id="mealSelector">
+          <button class="meal-sel-btn active" data-meal="breakfast" onclick="selectMeal(this)">Breakfast</button>
+          <button class="meal-sel-btn" data-meal="lunch" onclick="selectMeal(this)">Lunch</button>
+          <button class="meal-sel-btn" data-meal="dinner" onclick="selectMeal(this)">Dinner</button>
+          <button class="meal-sel-btn" data-meal="snacks" onclick="selectMeal(this)">Snacks</button>
+          <button class="meal-sel-btn" data-meal="preworkout" onclick="selectMeal(this)">Pre-Workout</button>
+          <button class="meal-sel-btn" data-meal="postworkout" onclick="selectMeal(this)">Post-Workout</button>
+        </div>
+      </div>
+
+      <!-- Macro cards -->
+      <div class="macro-grid">
+        <div class="macro-card">
+          <div class="macro-val cal" id="dCal">0</div>
+          <div class="macro-unit">kcal</div>
+        </div>
+        <div class="macro-card">
+          <div class="macro-val prot" id="dProt">0</div>
+          <div class="macro-unit">protein (g)</div>
+        </div>
+        <div class="macro-card">
+          <div class="macro-val carb" id="dCarb">0</div>
+          <div class="macro-unit">carbs (g)</div>
+        </div>
+        <div class="macro-card">
+          <div class="macro-val fat" id="dFat">0</div>
+          <div class="macro-unit">fats (g)</div>
+        </div>
+      </div>
+
+      <!-- Extra nutrients -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px" id="extraNutrients"></div>
+
+      <button class="add-btn" onclick="addToMeal()">+ Add to Meal Plan</button>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT: MEAL PLANNER ── -->
+  <div class="daily-summary">
+
+    <!-- Daily Targets -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-header">
+        <span class="panel-title">🎯 Daily Targets</span>
+      </div>
+      <div class="panel-body" style="padding:20px 24px">
+        <div class="target-row">
+          <span class="target-label">Calories</span>
+          <input class="target-input" id="tCal" type="number" value="2500" oninput="updateBars()" /> <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--stone)">kcal</span>
+        </div>
+        <div class="target-row">
+          <span class="target-label">Protein</span>
+          <input class="target-input" id="tProt" type="number" value="180" oninput="updateBars()" /> <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--stone)">g</span>
+        </div>
+        <div class="target-row">
+          <span class="target-label">Carbs</span>
+          <input class="target-input" id="tCarb" type="number" value="280" oninput="updateBars()" /> <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--stone)">g</span>
+        </div>
+        <div class="target-row">
+          <span class="target-label">Fats</span>
+          <input class="target-input" id="tFat" type="number" value="70" oninput="updateBars()" /> <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--stone)">g</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Summary -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-header">
+        <span class="panel-title">📊 Today's Totals</span>
+      </div>
+      <div class="panel-body" style="padding:20px 24px">
+        <div class="daily-cal" id="totalCal">0</div>
+        <div class="daily-cal-label">Total Calories</div>
+
+        <div class="macro-bar-row">
+          <div class="macro-bar-top">
+            <span class="macro-bar-label">Protein</span>
+            <span class="macro-bar-val"><span id="totalProt">0</span>g / <span id="barTProt">180</span>g</span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill bar-prot" id="barProt" style="width:0%"></div></div>
+        </div>
+        <div class="macro-bar-row">
+          <div class="macro-bar-top">
+            <span class="macro-bar-label">Carbs</span>
+            <span class="macro-bar-val"><span id="totalCarb">0</span>g / <span id="barTCarb">280</span>g</span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill bar-carb" id="barCarb" style="width:0%"></div></div>
+        </div>
+        <div class="macro-bar-row">
+          <div class="macro-bar-top">
+            <span class="macro-bar-label">Fats</span>
+            <span class="macro-bar-val"><span id="totalFat">0</span>g / <span id="barTFat">70</span>g</span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill bar-fat" id="barFat" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meal Plan -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🍽️ Meal Plan</span>
+      </div>
+      <div class="panel-body" style="padding:16px">
+        <div id="mealPlan"></div>
+        <button class="export-btn" onclick="exportPlan()">↓ Export Summary</button>
+        <button class="export-btn" onclick="clearAll()" style="margin-top:8px;color:var(--red);border-color:var(--red-l)">✕ Clear All</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────
+let currentFood = null;
+let selectedMeal = 'breakfast';
+let source = 'both';
+
+const meals = {
+  breakfast:   { label: 'Breakfast',   emoji: '🌅', items: [] },
+  lunch:       { label: 'Lunch',       emoji: '🍱', items: [] },
+  dinner:      { label: 'Dinner',      emoji: '🌙', items: [] },
+  snacks:      { label: 'Snacks',      emoji: '🥜', items: [] },
+  preworkout:  { label: 'Pre-Workout', emoji: '⚡', items: [] },
+  postworkout: { label: 'Post-Workout',emoji: '💪', items: [] },
+};
+
+// ── SOURCE TOGGLE ──────────────────────────────────────────────────
+function setSource(s, btn) {
+  source = s;
+  document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const ph = {
+    both: 'Search food… e.g. Dal Makhani, Paneer, Biryani',
+    indian: 'Search Indian food… e.g. Chole, Aloo Paratha, Lassi',
+    usda: 'Search USDA database… e.g. Chicken breast, Oats'
+  };
+  document.getElementById('searchInput').placeholder = ph[s];
+}
+
+// ── QUICK SEARCH ──────────────────────────────────────────────────
+function quickSearch(food) {
+  document.getElementById('searchInput').value = food;
+  doSearch();
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  showLoading();
+
+  try {
+    let results = [];
+
+    if (source === 'usda') {
+      results = await searchUSDA(q);
+    } else if (source === 'indian') {
+      results = await searchOFF(q, true);
+    } else {
+      // Both — search in parallel
+      const [off, usda] = await Promise.all([
+        searchOFF(q, false).catch(() => []),
+        searchUSDA(q).catch(() => [])
+      ]);
+      // Interleave results, Indian foods first
+      results = [...off, ...usda].slice(0, 20);
+    }
+
+    showResults(results, q);
+  } catch(err) {
+    showError('Search failed. Please try again.');
+  }
+}
+
+// ── OPEN FOOD FACTS ───────────────────────────────────────────────
+async function searchOFF(q, indianOnly) {
+  let query = indianOnly ? `${q} indian` : q;
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15&fields=product_name,brands,nutriments,countries_tags,quantity`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  return (data.products || [])
+    .filter(p => p.product_name && p.nutriments)
+    .map(p => {
+      const n = p.nutriments;
+      const cal = Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || (n['energy_100g'] || 0) / 4.184 || 0);
+      return {
+        id: p.code || Math.random().toString(),
+        name: p.product_name,
+        brand: p.brands || (isIndian(p) ? '🇮🇳 Indian' : 'Open Food Facts'),
+        source: 'Open Food Facts',
+        per100: {
+          cal,
+          protein: Math.round((n['proteins_100g'] || 0) * 10) / 10,
+          carbs:   Math.round((n['carbohydrates_100g'] || 0) * 10) / 10,
+          fat:     Math.round((n['fat_100g'] || 0) * 10) / 10,
+          fiber:   Math.round((n['fiber_100g'] || 0) * 10) / 10,
+          sodium:  Math.round((n['sodium_100g'] || 0) * 1000),
+          sugar:   Math.round((n['sugars_100g'] || 0) * 10) / 10,
+        }
+      };
+    })
+    .filter(f => f.per100.cal > 0);
+}
+
+function isIndian(p) {
+  const countries = (p.countries_tags || []).join(' ');
+  return countries.includes('india') || countries.includes('en:india');
+}
+
+// ── USDA ─────────────────────────────────────────────────────────
+async function searchUSDA(q) {
+  // Using USDA demo key — works for testing; user should get own key for production
+  const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=10&api_key=DEMO_KEY&dataType=Foundation,SR Legacy,Branded`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  return (data.foods || []).map(f => {
+    const get = (name) => {
+      const n = (f.foodNutrients || []).find(x =>
+        x.nutrientName && x.nutrientName.toLowerCase().includes(name.toLowerCase()));
+      return n ? Math.round((n.value || 0) * 10) / 10 : 0;
+    };
+    return {
+      id: f.fdcId,
+      name: f.description,
+      brand: f.brandOwner || f.dataType || 'USDA',
+      source: 'USDA FoodData Central',
+      per100: {
+        cal:     Math.round(get('Energy')),
+        protein: get('Protein'),
+        carbs:   get('Carbohydrate'),
+        fat:     get('Total lipid'),
+        fiber:   get('Fiber'),
+        sodium:  Math.round(get('Sodium')),
+        sugar:   get('Sugars'),
+      }
+    };
+  }).filter(f => f.per100.cal > 0);
+}
+
+// ── SHOW RESULTS ──────────────────────────────────────────────────
+function showResults(results, q) {
+  const wrap = document.getElementById('resultsWrap');
+  if (!results.length) {
+    wrap.innerHTML = `<div class="state-msg"><div class="state-icon">🔍</div><div class="state-text">No results for "${q}"<br/>Try a different spelling or search in English</div></div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:12px">${results.length} results for "${q}"</div>
+    <div class="results-list">
+      ${results.map((f,i) => `
+        <div class="result-item" onclick="selectFood(${i})">
+          <div>
+            <div class="result-name">${f.name}</div>
+            <div class="result-brand">${f.brand} · ${f.source}</div>
+          </div>
+          <div class="result-cal">${f.per100.cal}<span> kcal/100g</span></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  wrap._results = results;
+}
+
+function showLoading() {
+  document.getElementById('resultsWrap').innerHTML = `
+    <div class="state-msg">
+      <div class="spinner-inline"></div>
+      <div class="state-text" style="margin-top:12px">Searching databases…</div>
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById('resultsWrap').innerHTML = `<div class="state-msg"><div class="state-icon">⚠️</div><div class="state-text">${msg}</div></div>`;
+}
+
+// ── SELECT FOOD ───────────────────────────────────────────────────
+function selectFood(i) {
+  const results = document.getElementById('resultsWrap')._results;
+  currentFood = results[i];
+  document.getElementById('detailName').textContent = currentFood.name;
+  document.getElementById('detailSource').textContent = `${currentFood.source} · ${currentFood.brand} · Per 100g`;
+  document.getElementById('portionInput').value = 100;
+  updateMacros();
+  const detail = document.getElementById('foodDetail');
+  detail.classList.add('show');
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDetail() {
+  document.getElementById('foodDetail').classList.remove('show');
+  currentFood = null;
+}
+
+// ── UPDATE MACROS ON PORTION CHANGE ──────────────────────────────
+function updateMacros() {
+  if (!currentFood) return;
+  const g = parseFloat(document.getElementById('portionInput').value) || 100;
+  const r = currentFood.per100;
+  const factor = g / 100;
+
+  document.getElementById('dCal').textContent  = Math.round(r.cal     * factor);
+  document.getElementById('dProt').textContent = Math.round(r.protein * factor * 10) / 10;
+  document.getElementById('dCarb').textContent = Math.round(r.carbs   * factor * 10) / 10;
+  document.getElementById('dFat').textContent  = Math.round(r.fat     * factor * 10) / 10;
+
+  // Extra nutrients
+  document.getElementById('extraNutrients').innerHTML = [
+    ['Fiber',  Math.round(r.fiber  * factor * 10) / 10, 'g'],
+    ['Sugar',  Math.round(r.sugar  * factor * 10) / 10, 'g'],
+    ['Sodium', Math.round(r.sodium * factor),           'mg'],
+  ].map(([lbl, val, unit]) => `
+    <div style="background:var(--cream);border:1px solid var(--border);padding:10px;text-align:center">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--charcoal)">${val}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone)">${lbl} (${unit})</div>
+    </div>
+  `).join('');
+}
+
+// ── MEAL SELECTOR ─────────────────────────────────────────────────
+function selectMeal(btn) {
+  document.querySelectorAll('.meal-sel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedMeal = btn.dataset.meal;
+}
+
+// ── ADD TO MEAL ───────────────────────────────────────────────────
+function addToMeal() {
+  if (!currentFood) return;
+  const g = parseFloat(document.getElementById('portionInput').value) || 100;
+  const r = currentFood.per100;
+  const factor = g / 100;
+
+  meals[selectedMeal].items.push({
+    name: currentFood.name,
+    grams: g,
+    cal:     Math.round(r.cal * factor),
+    protein: Math.round(r.protein * factor * 10) / 10,
+    carbs:   Math.round(r.carbs * factor * 10) / 10,
+    fat:     Math.round(r.fat * factor * 10) / 10,
+  });
+
+  renderMealPlan();
+  updateTotals();
+  showToast(`Added ${currentFood.name} to ${meals[selectedMeal].label}`);
+}
+
+// ── RENDER MEAL PLAN ──────────────────────────────────────────────
+function renderMealPlan() {
+  const wrap = document.getElementById('mealPlan');
+  wrap.innerHTML = Object.entries(meals).map(([key, meal]) => {
+    const mealCal = meal.items.reduce((s, i) => s + i.cal, 0);
+    return `
+      <div class="meal-section">
+        <div class="meal-hdr">
+          <div class="meal-hdr-left">
+            <span>${meal.emoji}</span>
+            <span class="meal-name">${meal.label}</span>
+          </div>
+          <span class="meal-kcal">${mealCal} kcal</span>
+        </div>
+        ${meal.items.length ? `
+          <div class="meal-items">
+            ${meal.items.map((item, idx) => `
+              <div class="meal-item">
+                <span class="meal-item-name">${item.name}</span>
+                <span class="meal-item-qty">${item.grams}g</span>
+                <span class="meal-item-cal">${item.cal} kcal</span>
+                <button class="meal-item-del" onclick="removeItem('${key}',${idx})">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<div class="empty-meal">No items added</div>`}
+      </div>
+    `;
+  }).join('');
+}
+
+function removeItem(mealKey, idx) {
+  meals[mealKey].items.splice(idx, 1);
+  renderMealPlan();
+  updateTotals();
+}
+
+// ── UPDATE TOTALS ─────────────────────────────────────────────────
+function updateTotals() {
+  let cal=0, prot=0, carb=0, fat=0;
+  Object.values(meals).forEach(m => m.items.forEach(i => {
+    cal += i.cal; prot += i.protein; carb += i.carbs; fat += i.fat;
+  }));
+
+  document.getElementById('totalCal').textContent  = Math.round(cal);
+  document.getElementById('totalProt').textContent = Math.round(prot * 10) / 10;
+  document.getElementById('totalCarb').textContent = Math.round(carb * 10) / 10;
+  document.getElementById('totalFat').textContent  = Math.round(fat * 10) / 10;
+  updateBars(prot, carb, fat);
+}
+
+function updateBars(prot, carb, fat) {
+  const tP = parseFloat(document.getElementById('tProt').value) || 180;
+  const tC = parseFloat(document.getElementById('tCarb').value) || 280;
+  const tF = parseFloat(document.getElementById('tFat').value) || 70;
+
+  document.getElementById('barTProt').textContent = tP;
+  document.getElementById('barTCarb').textContent = tC;
+  document.getElementById('barTFat').textContent  = tF;
+
+  // Use current totals if called from target input change
+  if (prot === undefined) {
+    prot = parseFloat(document.getElementById('totalProt').textContent) || 0;
+    carb = parseFloat(document.getElementById('totalCarb').textContent) || 0;
+    fat  = parseFloat(document.getElementById('totalFat').textContent)  || 0;
+  }
+
+  document.getElementById('barProt').style.width = Math.min(100, (prot / tP) * 100) + '%';
+  document.getElementById('barCarb').style.width = Math.min(100, (carb / tC) * 100) + '%';
+  document.getElementById('barFat').style.width  = Math.min(100, (fat  / tF) * 100) + '%';
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────
+function exportPlan() {
+  let text = 'PERSEVERED — DAILY MEAL PLAN\n';
+  text += '='.repeat(40) + '\n\n';
+
+  Object.values(meals).forEach(meal => {
+    if (!meal.items.length) return;
+    text += `${meal.emoji} ${meal.label.toUpperCase()}\n`;
+    text += '-'.repeat(30) + '\n';
+    meal.items.forEach(i => {
+      text += `${i.name} (${i.grams}g)\n`;
+      text += `  Calories: ${i.cal} kcal | Protein: ${i.protein}g | Carbs: ${i.carbs}g | Fat: ${i.fat}g\n`;
+    });
+    const mCal = meal.items.reduce((s,i) => s+i.cal, 0);
+    text += `Subtotal: ${mCal} kcal\n\n`;
+  });
+
+  text += '='.repeat(40) + '\n';
+  text += `DAILY TOTAL\n`;
+  text += `Calories: ${document.getElementById('totalCal').textContent} kcal\n`;
+  text += `Protein:  ${document.getElementById('totalProt').textContent}g\n`;
+  text += `Carbs:    ${document.getElementById('totalCarb').textContent}g\n`;
+  text += `Fats:     ${document.getElementById('totalFat').textContent}g\n`;
+
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Persevered_Meal_Plan.txt';
+  a.click();
+  showToast('Meal plan exported!');
+}
+
+function clearAll() {
+  Object.keys(meals).forEach(k => meals[k].items = []);
+  renderMealPlan();
+  updateTotals();
+  showToast('Meal plan cleared');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderMealPlan();
+</script>
+</body>
+</html>
