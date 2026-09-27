@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persevered — Your Custom Fitness Journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <script>
+    // When shown inside the main site (iframe), hide this page's own header
+    if (window.self !== window.top) document.documentElement.classList.add('embedded');
+  </script>
+  <!-- SheetJS for Excel generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a0b;
+      --surface: #121214;
+      --surface-2: #19191c;
+      --line: rgba(255,255,255,0.08);
+      --line-2: rgba(255,255,255,0.14);
+      --text: #f5f2ed;
+      --muted: #a39f98;
+      --dim: #6f6b65;
+      --ember: #ff5b1f;
+      --amber: #ffb347;
+      --hot: #ff2d55;
+      --green: #3ddc97;
+      --grad: linear-gradient(100deg, var(--amber) 0%, var(--ember) 45%, var(--hot) 100%);
+      --display: 'Anton', 'Impact', sans-serif;
+      --sans: 'Space Grotesk', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --ease: cubic-bezier(.2,.8,.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background:
+        radial-gradient(900px 600px at 85% -10%, rgba(255,91,31,.16), transparent 60%),
+        radial-gradient(700px 500px at -10% 30%, rgba(255,45,85,.08), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 400;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--ember); color: #0a0a0b; }
+
+    /* ── HEADER ── */
+    header {
+      height: 72px;
+      padding: 0 clamp(16px, 5vw, 60px);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10,10,11,0.75);
+      -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-family: var(--display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo span { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .header-tag {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .header-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      height: 3px;
+      background: var(--line);
+      position: sticky;
+      top: 72px;
+      z-index: 49;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--grad);
+      box-shadow: 0 0 16px rgba(255,91,31,.7);
+      transition: width 0.6s var(--ease);
+      width: 0%;
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* Embedded inside the main site (iframe): drop the duplicate header */
+    html.embedded body { background: transparent; }
+    html.embedded header { display: none; }
+    html.embedded .progress-wrap { top: 0; }
+    html.embedded .form-shell { padding-top: 48px; }
+
+    /* ── MAIN LAYOUT ── */
+    .form-shell {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 72px 20px 120px;
+    }
+
+    /* ── INTRO ── */
+    .intro-block { margin-bottom: 40px; }
+
+    .intro-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ember);
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .intro-tag::before { content: ''; width: 28px; height: 1px; background: var(--grad); }
+
+    .intro-title {
+      font-family: var(--display);
+      font-weight: 400;
+      text-transform: uppercase;
+      font-size: clamp(52px, 9vw, 96px);
+      line-height: .92;
+      color: var(--text);
+      margin-bottom: 22px;
+    }
+    .intro-title em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .intro-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 500px;
+    }
+
+    /* ── SECTION (card) ── */
+    .form-section {
+      background: linear-gradient(180deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: clamp(22px, 4vw, 36px);
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.5s var(--ease), transform 0.5s var(--ease), border-color .3s;
+      pointer-events: none;
+    }
+    .form-section:focus-within { border-color: rgba(255,91,31,.45); box-shadow: 0 20px 60px -30px rgba(255,91,31,.45); }
+    .form-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+    .form-section.hidden-section { display: none; }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ember);
+      margin-bottom: 16px;
+      display: inline-flex; align-items: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,91,31,.08);
+      border: 1px solid rgba(255,91,31,.22);
+    }
+
+    .field-label {
+      font-family: var(--sans);
+      font-size: 19px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 18px;
+      line-height: 1.35;
+    }
+
+    .field-hint {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-top: -8px;
+      margin-bottom: 18px;
+    }
+
+    .metric-label {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* ── INPUT TYPES ── */
+    .text-input, .number-input, .text-area {
+      width: 100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line-2);
+      border-radius: 14px;
+      padding: 15px 18px;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+    }
+    .text-input:focus, .number-input:focus, .text-area:focus {
+      border-color: var(--ember);
+      background: rgba(255,91,31,.05);
+      box-shadow: 0 0 0 4px rgba(255,91,31,.12);
+    }
+    .text-input::placeholder, .text-area::placeholder { color: var(--dim); font-size: 15px; }
+    .number-input { width: 140px; text-align: center; font-size: 20px; }
+    .text-area { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+    .input-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 24px; }
+    .row-gap { margin-bottom: 26px; }
+
+    /* Choice chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .chip {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 11px 18px;
+      border: 1px solid var(--line-2);
+      border-radius: 999px;
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .2s, border-color .2s, color .2s, transform .2s var(--ease), box-shadow .2s;
+      user-select: none;
+    }
+    .chip:hover { border-color: rgba(255,255,255,.35); color: var(--text); transform: translateY(-1px); }
+    .chip.selected {
+      background: var(--grad);
+      border-color: transparent;
+      color: #0a0a0b;
+      box-shadow: 0 8px 24px -10px rgba(255,91,31,.8);
+    }
+    .chip.multi.selected {
+      background: rgba(255,91,31,.12);
+      border-color: var(--ember);
+      color: var(--text);
+      box-shadow: none;
+    }
+    .chip.multi.selected::before { content: '✓'; color: var(--ember); margin-right: 8px; font-weight: 600; }
+
+    /* Scale slider */
+    .scale-wrap { padding: 8px 0; }
+    .scale-input {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px; border-radius: 4px;
+      background: var(--line-2); outline: none; cursor: pointer;
+    }
+    .scale-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--ember); box-shadow: 0 0 0 5px rgba(255,91,31,.2);
+      cursor: pointer; transition: transform 0.2s;
+    }
+    .scale-input::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .scale-labels { display: flex; justify-content: space-between; margin-top: 10px; }
+    .scale-labels span { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); }
+    .scale-value { text-align: center; font-family: var(--display); font-size: 44px; color: var(--ember); margin-bottom: 8px; }
+
+    /* ── LEVEL INDICATOR ── */
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border: 1px solid var(--line-2);
+      border-radius: 999px;
+      background: rgba(18,18,20,.8);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      margin-bottom: 28px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.5s, transform .5s var(--ease);
+    }
+    .level-badge.show { opacity: 1; transform: none; }
+    .level-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--dim);
+      transition: background 0.5s, box-shadow .5s;
+    }
+    .level-dot.beginner { background: var(--green); box-shadow: 0 0 12px var(--green); }
+    .level-dot.intermediate { background: var(--amber); box-shadow: 0 0 12px var(--amber); }
+    .level-dot.advanced { background: var(--hot); box-shadow: 0 0 12px var(--hot); }
+    .level-text {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    /* ── DIVIDER (spacing between cards) ── */
+    .form-divider { height: 0; margin: 14px 0; }
+
+    /* ── SUBMIT BLOCK ── */
+    .submit-block {
+      margin-top: 28px;
+      border-radius: 24px;
+      padding: clamp(24px, 4vw, 40px);
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(120% 140% at 0% 0%, rgba(255,91,31,.18), transparent 55%),
+        var(--surface);
+    }
+    .submit-kicker { font-family: var(--mono); font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); margin-bottom: 14px; }
+    .submit-title { font-family: var(--display); font-size: clamp(34px, 5vw, 48px); text-transform: uppercase; line-height: 1; color: var(--text); margin-bottom: 12px; }
+    .submit-sub { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 8px; }
+
+    /* ── NEXT / SUBMIT BTN ── */
+    .btn-next {
+      position: relative; overflow: hidden; isolation: isolate;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: var(--grad);
+      color: #0a0a0b;
+      border: none;
+      border-radius: 999px;
+      padding: 18px 34px;
+      cursor: pointer;
+      margin-top: 24px;
+      box-shadow: 0 12px 40px -12px rgba(255,91,31,.7);
+      transition: transform .25s var(--ease), box-shadow .25s;
+    }
+    .btn-next::after {
+      content: ''; position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+      transform: translateX(-120%); transition: transform .7s var(--ease);
+    }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 18px 50px -12px rgba(255,91,31,.9); }
+    .btn-next:hover::after { transform: translateX(120%); }
+    .btn-next:disabled {
+      background: var(--surface-2);
+      color: var(--dim);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* ── SUCCESS ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 80px 0;
+      animation: pop .7s var(--ease);
+    }
+    @keyframes pop { from { opacity: 0; transform: translateY(20px) scale(.98); } to { opacity: 1; transform: none; } }
+
+    .success-icon {
+      width: 84px; height: 84px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 36px;
+      background: var(--grad); color: #0a0a0b;
+      box-shadow: 0 0 0 10px rgba(255,91,31,.12), 0 20px 60px -10px rgba(255,91,31,.8);
+    }
+
+    .success-title {
+      font-family: var(--display);
+      font-weight: 400;
+      text-transform: uppercase;
+      font-size: clamp(52px, 9vw, 84px);
+      line-height: .95;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .success-title em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .success-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.85;
+      max-width: 440px;
+      margin: 0 auto 36px;
+    }
+
+    .success-detail {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text);
+      padding: 14px 22px;
+      border: 1px solid var(--line-2);
+      border-radius: 999px;
+      display: inline-block;
+      background: rgba(255,255,255,.03);
+    }
+
+    /* ── SENDING STATE ── */
+    .sending-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,11,0.85);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .sending-overlay.show { display: flex; }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid var(--line-2);
+      border-top-color: var(--ember);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      box-shadow: 0 0 30px -6px rgba(255,91,31,.7);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .sending-text {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── ERROR MSG ── */
+    .error-msg {
+      display: none;
+      background: rgba(255,45,85,.08);
+      border: 1px solid rgba(255,45,85,.4);
+      border-radius: 14px;
+      color: #ff8aa0;
+      padding: 16px 20px;
+      font-size: 14px;
+      margin-top: 18px;
+      line-height: 1.6;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { height: 64px; }
+      .progress-wrap { top: 64px; }
+      .header-tag { font-size: 9.5px; letter-spacing: 1px; }
+      .form-shell { padding: 44px 16px 100px; }
+      html.embedded .form-shell { padding-top: 32px; }
+      .input-row-2 { grid-template-columns: 1fr; gap: 20px; }
+      .input-row-2.keep-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .chips { gap: 8px; }
+      .chip { padding: 10px 15px; font-size: 13.5px; }
+      .btn-next { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SENDING OVERLAY -->
+  <div class="sending-overlay" id="sendingOverlay">
+    <div class="spinner"></div>
+    <p class="sending-text">Sending your plan request…</p>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <a class="logo" href="#">Persever<span>ed</span></a>
+    <span class="header-tag">Client Intake — Confidential</span>
+  </header>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- FORM SHELL -->
+  <div class="form-shell">
+
+    <!-- INTRO -->
+    <div class="intro-block">
+      <p class="intro-tag">Your Custom Plan Starts Here</p>
+      <h1 class="intro-title">Tell us<br/>about <em>yourself.</em></h1>
+      <p class="intro-sub">Answer honestly — there are no wrong answers. Your responses shape everything we build for you.</p>
+    </div>
+
+    <!-- LEVEL BADGE -->
+    <div class="level-badge" id="levelBadge">
+      <div class="level-dot" id="levelDot"></div>
+      <span class="level-text" id="levelText">Assessing your level…</span>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- LAYER 1 — EVERYONE (always shown)        -->
+    <!-- ════════════════════════════════════════ -->
+
+    <!-- Q1: Name + Email -->
+    <div class="form-section" id="s-identity">
+      <p class="section-label">Section 01 — Identity</p>
+      <div class="input-row-2 row-gap">
+        <div>
+          <p class="field-label">What's your name?</p>
+          <input class="text-input" id="f-name" type="text" placeholder="Full name" />
+        </div>
+        <div>
+          <p class="field-label">Your email address</p>
+          <input class="text-input" id="f-email" type="email" placeholder="you@email.com" />
+        </div>
+      </div>
+      <div class="input-row-2">
+        <div>
+          <p class="field-label">Your age</p>
+          <input class="text-input" id="f-age" type="number" placeholder="e.g. 28" min="13" max="99" />
+        </div>
+        <div>
+          <p class="field-label">Gender</p>
+          <div class="chips" id="chips-gender">
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Male</div>
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Female</div>
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Non-binary</div>
+            <div class="chip" data-group="gender" onclick="pickChip(this)">Prefer not to say</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q2: Primary Goal -->
+    <div class="form-section" id="s-goal">
+      <p class="section-label">Section 02 — Goal</p>
+      <p class="field-label">What's your primary fitness goal?</p>
+      <div class="chips" id="chips-goal">
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Lose Fat</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Build Muscle</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Improve Endurance</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Get Stronger</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">Athletic Performance</div>
+        <div class="chip" data-group="goal" onclick="pickChip(this); score()">General Fitness</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q3: Training Frequency -->
+    <div class="form-section" id="s-freq">
+      <p class="section-label">Section 03 — Current Routine</p>
+      <p class="field-label">How often do you currently exercise?</p>
+      <div class="chips" id="chips-freq">
+        <div class="chip" data-group="freq" data-score="0" onclick="pickChip(this); score()">Never / rarely</div>
+        <div class="chip" data-group="freq" data-score="1" onclick="pickChip(this); score()">1–2x per week</div>
+        <div class="chip" data-group="freq" data-score="2" onclick="pickChip(this); score()">3–4x per week</div>
+        <div class="chip" data-group="freq" data-score="3" onclick="pickChip(this); score()">5+ times per week</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q4: Experience -->
+    <div class="form-section" id="s-exp">
+      <p class="section-label">Section 04 — Experience</p>
+      <p class="field-label">How long have you been training consistently?</p>
+      <div class="chips" id="chips-exp">
+        <div class="chip" data-group="exp" data-score="0" onclick="pickChip(this); score()">Less than 6 months</div>
+        <div class="chip" data-group="exp" data-score="1" onclick="pickChip(this); score()">6 months – 2 years</div>
+        <div class="chip" data-group="exp" data-score="2" onclick="pickChip(this); score()">2–5 years</div>
+        <div class="chip" data-group="exp" data-score="3" onclick="pickChip(this); score()">5+ years</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q5: Available time per session -->
+    <div class="form-section" id="s-time">
+      <p class="section-label">Section 05 — Schedule</p>
+      <p class="field-label">How much time can you dedicate per session?</p>
+      <div class="chips" id="chips-time">
+        <div class="chip" data-group="time" onclick="pickChip(this)">Under 30 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">30–45 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">45–60 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">60–90 min</div>
+        <div class="chip" data-group="time" onclick="pickChip(this)">90+ min</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q6: Equipment -->
+    <div class="form-section" id="s-equip">
+      <p class="section-label">Section 06 — Equipment</p>
+      <p class="field-label">What equipment do you have access to?</p>
+      <p class="field-hint">Select all that apply</p>
+      <div class="chips" id="chips-equip">
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Full Gym</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Home Gym</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Dumbbells</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Barbells & Rack</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Resistance Bands</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">Cardio Machines</div>
+        <div class="chip multi" data-group="equip" onclick="pickMulti(this)">No Equipment</div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- Q7: Injuries -->
+    <div class="form-section" id="s-injury">
+      <p class="section-label">Section 07 — Health</p>
+      <p class="field-label">Any injuries or physical limitations we should know about?</p>
+      <textarea class="text-area" id="f-injury" placeholder="e.g. Lower back pain, bad knees, shoulder surgery — or type 'None'"></textarea>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- LAYER 2 — INTERMEDIATE (score ≥ 3)       -->
+    <!-- ════════════════════════════════════════ -->
+
+    <div class="form-divider hidden-section" id="div-intermediate"></div>
+
+    <div class="form-section hidden-section" id="s-style">
+      <p class="section-label">Section 08 — Training Style</p>
+      <p class="field-label">What training styles have you tried?</p>
+      <p class="field-hint">Select all that apply</p>
+      <div class="chips" id="chips-style">
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Weightlifting</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">CrossFit / HIIT</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Calisthenics</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Running / Cycling</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Yoga / Mobility</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Powerlifting</div>
+        <div class="chip multi" data-group="style" onclick="pickMulti(this)">Sports-specific</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-int2"></div>
+
+    <div class="form-section hidden-section" id="s-nutrition">
+      <p class="section-label">Section 09 — Nutrition</p>
+      <p class="field-label">How would you describe your current diet?</p>
+      <div class="chips" id="chips-nutrition">
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">No specific diet</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">High protein focus</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Calorie tracking</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Keto / Low-carb</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Vegetarian / Vegan</div>
+        <div class="chip" data-group="nutrition" onclick="pickChip(this)">Intermittent Fasting</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-int3"></div>
+
+    <div class="form-section hidden-section" id="s-body">
+      <p class="section-label">Section 10 — Body Metrics</p>
+      <p class="field-label">Your current stats</p>
+      <p class="field-hint">Approximate is fine</p>
+      <div class="input-row-2 keep-2">
+        <div>
+          <p class="metric-label">Weight (kg)</p>
+          <input class="text-input" id="f-weight" type="number" placeholder="e.g. 78" />
+        </div>
+        <div>
+          <p class="metric-label">Height (cm)</p>
+          <input class="text-input" id="f-height" type="number" placeholder="e.g. 178" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-int4"></div>
+
+    <div class="form-section hidden-section" id="s-obstacle">
+      <p class="section-label">Section 11 — Challenges</p>
+      <p class="field-label">What's held you back from reaching your goal before?</p>
+      <textarea class="text-area" id="f-obstacle" placeholder="e.g. Lack of time, inconsistency, no proper guidance…"></textarea>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- LAYER 3 — ADVANCED (score ≥ 5)           -->
+    <!-- ════════════════════════════════════════ -->
+
+    <div class="form-divider hidden-section" id="div-advanced"></div>
+
+    <div class="form-section hidden-section" id="s-lifts">
+      <p class="section-label">Section 12 — Strength Benchmarks</p>
+      <p class="field-label">Your approximate 1-rep max (or working weight)</p>
+      <p class="field-hint">Leave blank if not applicable</p>
+      <div class="input-row-2 keep-2">
+        <div>
+          <p class="metric-label">Squat (kg)</p>
+          <input class="text-input" id="f-squat" type="number" placeholder="e.g. 120" />
+        </div>
+        <div>
+          <p class="metric-label">Bench Press (kg)</p>
+          <input class="text-input" id="f-bench" type="number" placeholder="e.g. 90" />
+        </div>
+        <div>
+          <p class="metric-label">Deadlift (kg)</p>
+          <input class="text-input" id="f-deadlift" type="number" placeholder="e.g. 150" />
+        </div>
+        <div>
+          <p class="metric-label">Overhead Press (kg)</p>
+          <input class="text-input" id="f-ohp" type="number" placeholder="e.g. 60" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv2"></div>
+
+    <div class="form-section hidden-section" id="s-program">
+      <p class="section-label">Section 13 — Programming Preference</p>
+      <p class="field-label">What programming approach do you prefer?</p>
+      <div class="chips" id="chips-program">
+        <div class="chip" data-group="program" onclick="pickChip(this)">Linear Progression</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Periodisation (Wave Loading)</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Daily Undulating Periodisation</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Block Periodisation</div>
+        <div class="chip" data-group="program" onclick="pickChip(this)">Let my coach decide</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv3"></div>
+
+    <div class="form-section hidden-section" id="s-tracking">
+      <p class="section-label">Section 14 — Performance Tracking</p>
+      <p class="field-label">What do you currently track?</p>
+      <p class="field-hint">Select all that apply</p>
+      <div class="chips" id="chips-tracking">
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Calories & Macros</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Body Weight</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Workout Volume</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Sleep</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Heart Rate / HRV</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Progress Photos</div>
+        <div class="chip multi" data-group="tracking" onclick="pickMulti(this)">Nothing currently</div>
+      </div>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv4"></div>
+
+    <div class="form-section hidden-section" id="s-compete">
+      <p class="section-label">Section 15 — Competition & Performance</p>
+      <p class="field-label">Are you training for any specific event or competition?</p>
+      <textarea class="text-area" id="f-compete" placeholder="e.g. Powerlifting meet in March, Tough Mudder, sport season — or 'No'"></textarea>
+    </div>
+
+    <div class="form-divider hidden-section" id="div-adv5"></div>
+
+    <div class="form-section hidden-section" id="s-advanced-notes">
+      <p class="section-label">Section 16 — Additional Detail</p>
+      <p class="field-label">Anything else your coach should know?</p>
+      <textarea class="text-area" id="f-adv-notes" placeholder="Supplement stack, past programs, specific weaknesses, performance goals…"></textarea>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- SUBMIT                                    -->
+    <!-- ════════════════════════════════════════ -->
+
+    <div id="submitWrap" class="submit-block" style="display:none">
+      <p class="submit-kicker">You're all set</p>
+      <p class="submit-title">Ready to build your plan?</p>
+      <p class="submit-sub">Your responses will be sent to your Persevered coach. You'll hear back within 24 hours.</p>
+      <button class="btn-next" id="submitBtn" onclick="submitForm()">Send My Responses →</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✦</div>
+      <h2 class="success-title">Your journey<br/><em>begins now.</em></h2>
+      <p class="success-sub">We've received everything we need. Your Persevered coach will reach out within 24 hours with your fully personalised plan.</p>
+      <div class="success-detail" id="successDetail">Plan Type: —</div>
+    </div>
+
+  </div><!-- end form-shell -->
+
+  <script>
+  // ── CONFIG ──────────────────────────────────────────────────────────
+  const OWNER_EMAIL = '4knation36815@gmail.com';
+
+  // Google Apps Script Web App URL
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwdkCpp5JWQ3riJo5Ie0S5TQSvCeKy3t5N9in4RMcRZEs5fu0kW7iGIA1oUd9ZnwHI6/exec';
+
+  // EmailJS public key & service/template IDs
+  // IMPORTANT: Replace these with your real EmailJS credentials
+  const EMAILJS_PUBLIC_KEY  = 'Rr7lKNhO2T1KPs88x';
+  const EMAILJS_SERVICE_ID  = 'service_43u0imi';
+  const EMAILJS_TEMPLATE_ID = 'template_5gw25lk';
+
+  if (window.emailjs) emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  // ── STATE ────────────────────────────────────────────────────────────
+  let knowledgeScore = 0;
+  let detectedLevel  = 'beginner'; // beginner | intermediate | advanced
+  let intermediateShown = false;
+  let advancedShown     = false;
+
+  // ── ALL SECTIONS in order ───────────────────────────────────────────
+  const ALL_SECTIONS = [
+    's-identity','s-goal','s-freq','s-exp','s-time','s-equip','s-injury',
+    's-style','s-nutrition','s-body','s-obstacle',
+    's-lifts','s-program','s-tracking','s-compete','s-advanced-notes'
+  ];
+
+  const BASE_SECTIONS  = ['s-identity','s-goal','s-freq','s-exp','s-time','s-equip','s-injury'];
+  const INT_SECTIONS   = ['s-style','s-nutrition','s-body','s-obstacle'];
+  const ADV_SECTIONS   = ['s-lifts','s-program','s-tracking','s-compete','s-advanced-notes'];
+  const INT_DIVIDERS   = ['div-intermediate','div-int2','div-int3','div-int4'];
+  const ADV_DIVIDERS   = ['div-advanced','div-adv2','div-adv3','div-adv4','div-adv5'];
+
+  const TOTAL_SECTIONS = BASE_SECTIONS.length;
+
+  // ── INIT ─────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    BASE_SECTIONS.forEach(id => show(id));
+    updateProgress();
+    setTimeout(() => document.getElementById('submitWrap').style.display = 'block', 400);
+  });
+
+  // ── CHIP PICKERS ─────────────────────────────────────────────────────
+  function pickChip(el) {
+    const group = el.dataset.group;
+    document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function pickMulti(el) {
+    el.classList.toggle('selected');
+  }
+
+  // ── SCORING ENGINE ───────────────────────────────────────────────────
+  function score() {
+    const freqEl  = document.querySelector('.chip[data-group="freq"].selected');
+    const expEl   = document.querySelector('.chip[data-group="exp"].selected');
+    const freqScore = freqEl  ? parseInt(freqEl.dataset.score  || 0) : 0;
+    const expScore  = expEl   ? parseInt(expEl.dataset.score   || 0) : 0;
+    knowledgeScore = freqScore + expScore;
+
+    // Update level badge
+    const badge = document.getElementById('levelBadge');
+    const dot   = document.getElementById('levelDot');
+    const txt   = document.getElementById('levelText');
+    badge.classList.add('show');
+
+    if (knowledgeScore <= 2) {
+      detectedLevel = 'beginner';
+      dot.className = 'level-dot beginner';
+      txt.textContent = 'Level: Beginner — keeping it simple for you';
+    } else if (knowledgeScore <= 4) {
+      detectedLevel = 'intermediate';
+      dot.className = 'level-dot intermediate';
+      txt.textContent = 'Level: Intermediate — unlocking deeper questions';
+    } else {
+      detectedLevel = 'advanced';
+      dot.className = 'level-dot advanced';
+      txt.textContent = 'Level: Advanced — full detail mode';
+    }
+
+    // Unlock sections progressively
+    if (knowledgeScore >= 3 && !intermediateShown) {
+      intermediateShown = true;
+      INT_DIVIDERS.forEach(id => showDiv(id));
+      INT_SECTIONS.forEach(id => show(id));
+    }
+
+    if (knowledgeScore >= 5 && !advancedShown) {
+      advancedShown = true;
+      ADV_DIVIDERS.forEach(id => showDiv(id));
+      ADV_SECTIONS.forEach(id => show(id));
+    }
+
+    updateProgress();
+  }
+
+  function show(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('hidden-section');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => el.classList.add('visible'));
+    });
+  }
+
+  function showDiv(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden-section');
+  }
+
+  function updateProgress() {
+    const visible = document.querySelectorAll('.form-section.visible').length;
+    const total   = ALL_SECTIONS.length;
+    const pct     = Math.round((visible / total) * 85);
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  // ── COLLECT DATA ─────────────────────────────────────────────────────
+  function getVal(id)      { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function getChip(group)  { const el = document.querySelector(`.chip[data-group="${group}"].selected`); return el ? el.textContent.trim() : ''; }
+  function getMulti(group) { return [...document.querySelectorAll(`.chip[data-group="${group}"].selected`)].map(c => c.textContent.trim()).join(', ') || ''; }
+
+  function collectData() {
+    const base = {
+      'Submission Date': new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}),
+      'Client Level': detectedLevel.charAt(0).toUpperCase() + detectedLevel.slice(1),
+      'Full Name':    getVal('f-name'),
+      'Email':        getVal('f-email'),
+      'Age':          getVal('f-age'),
+      'Gender':       getChip('gender'),
+      'Primary Goal': getChip('goal'),
+      'Training Frequency': getChip('freq'),
+      'Training Experience': getChip('exp'),
+      'Time Per Session': getChip('time'),
+      'Equipment Access': getMulti('equip'),
+      'Injuries / Limitations': getVal('f-injury'),
+    };
+
+    const intermediate = knowledgeScore >= 3 ? {
+      'Training Styles': getMulti('style'),
+      'Current Diet': getChip('nutrition'),
+      'Weight (kg)': getVal('f-weight'),
+      'Height (cm)': getVal('f-height'),
+      'Past Obstacles': getVal('f-obstacle'),
+    } : {};
+
+    const advanced = knowledgeScore >= 5 ? {
+      'Squat 1RM (kg)':      getVal('f-squat'),
+      'Bench 1RM (kg)':      getVal('f-bench'),
+      'Deadlift 1RM (kg)':   getVal('f-deadlift'),
+      'OHP 1RM (kg)':        getVal('f-ohp'),
+      'Programming Preference': getChip('program'),
+      'What They Track':     getMulti('tracking'),
+      'Competition / Event': getVal('f-compete'),
+      'Additional Notes':    getVal('f-adv-notes'),
+    } : {};
+
+    return { ...base, ...intermediate, ...advanced };
+  }
+
+  // ── EXCEL GENERATION ─────────────────────────────────────────────────
+  function buildExcel(data) {
+    const levelLabel = data['Client Level'].toUpperCase();
+    const sheetName  = levelLabel + ' CLIENTS';
+
+    const wb = XLSX.utils.book_new();
+    const headers = Object.keys(data);
+    const row     = Object.values(data);
+
+    // Title row style via HTML approach
+    const ws = XLSX.utils.aoa_to_sheet([
+      [`PERSEVERED — ${levelLabel} CLIENT INTAKE`],
+      [`Generated: ${new Date().toLocaleString()}`],
+      [],
+      headers,
+      row
+    ]);
+
+    // Column widths
+    ws['!cols'] = headers.map(() => ({ wch: 28 }));
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // Return as base64
+    return XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+  }
+
+  // ── SUBMIT ───────────────────────────────────────────────────────────
+  async function submitForm() {
+    const name  = getVal('f-name');
+    const email = getVal('f-email');
+
+    if (!name || !email) {
+      showError('Please enter your name and email before submitting.');
+      return;
+    }
+    if (!email.includes('@')) {
+      showError('Please enter a valid email address.');
+      return;
+    }
+
+    const data    = collectData();
+    const level   = data['Client Level'];
+    const summary = buildSummary(data);
+
+    document.getElementById('sendingOverlay').classList.add('show');
+
+    // ── 1. SEND TO GOOGLE SHEETS (iframe POST — avoids CORS) ───────────
+    let sheetsOk = false;
+    try {
+      await new Promise((resolve) => {
+        const iframe = document.createElement('iframe');
+        iframe.name = 'gs_iframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = SHEETS_URL;
+        form.target = 'gs_iframe';
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'payload';
+        input.value = JSON.stringify(data);
+        form.appendChild(input);
+        document.body.appendChild(form);
+
+        setTimeout(() => { resolve(); }, 3000);
+        form.submit();
+        sheetsOk = true;
+      });
+    } catch (err) {
+      console.warn('Google Sheets error:', err);
+    }
+
+    // ── 2. SEND EMAIL NOTIFICATION VIA EMAILJS ────────────────────────
+    let emailOk = false;
+    try {
+      const templateParams = {
+        to_email:     OWNER_EMAIL,
+        subject:      'New ' + level + ' Client - ' + name + ' | Persevered',
+        client_name:  name,
+        client_email: email,
+        client_level: level,
+        summary:      summary,
+      };
+      const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+      emailOk = true;
+    } catch (err) {
+      console.warn('EmailJS error details:', JSON.stringify(err), err.text || '', err.status || '');
+    }
+
+    document.getElementById('sendingOverlay').classList.remove('show');
+
+    // ── 3. SHOW SUCCESS (if at least Sheets worked) ───────────────────
+    if (sheetsOk || emailOk) {
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('submitWrap').style.display = 'none';
+      document.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
+      document.querySelectorAll('.form-divider').forEach(d => d.style.display = 'none');
+      document.querySelector('.intro-block').style.display = 'none';
+      document.getElementById('levelBadge').style.display  = 'none';
+
+      const ss = document.getElementById('successScreen');
+      ss.style.display = 'block';
+      document.getElementById('successDetail').textContent = `Plan Type: ${level} · Coach response within 24 hours`;
+    } else {
+      showError('Something went wrong. Please email us at ' + OWNER_EMAIL + '. Check that your EmailJS template variables match exactly.');
+    }
+  }
+
+  function buildSummary(data) {
+    return Object.entries(data)
+      .map(([k, v]) => `${k}: ${v || '—'}`)
+      .join('\n');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.innerHTML = msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  </script>
+
+</body>
+</html>
